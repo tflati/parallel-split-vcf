@@ -12,6 +12,8 @@ print("STARTED ({})".format(start_time))
 filename = sys.argv[1]
 basedir = sys.argv[2]
 
+simple_name = os.path.basename(filename)
+
 if not os.path.exists(basedir):
 	os.makedirs(basedir)
 
@@ -23,12 +25,14 @@ raw_files = {}
 csv_files = {}
 
 # "variants", "variant_infos", "genotypes", "genotype_infos", "chromosomes"
-for element in [Variant, VariantInfo, GenotypeInfo, Genotype, Chromosome]:
+for element in [Variant, VariantInfo, GenotypeInfo]:
 	raw_file = gzip.open(basedir + str(element.__name__) + ".csv.gz", "w")
 	csv_file = csv.writer(raw_file)
-# 	names = [name for name in element.get_names()]
-# 	names[0] = "#" + names[0]
-	names = element.get_names()
+	
+	names = [name for name in element.get_names()]
+	names[0] = names[0] + ":ID("+ str(element.__name__) + ")"
+# 	names = element.get_names()
+
 	csv_file.writerow(names);
 	csv_files[element] = csv_file
 	raw_files[element] = raw_file
@@ -59,9 +63,9 @@ with open(filename, "r") as file:
 			col_names = cols[0:9]
 			sample_names = cols[9:]
 			
-			for sample_name in sample_names:
-				genotype = Genotype(id=sample_name)
-				csv_files[Genotype].writerow(genotype.get_all())
+# 			for sample_name in sample_names:
+# 				genotype = Genotype(id=sample_name)
+# 				csv_files[Genotype].writerow(genotype.get_all())
 			
 			continue
 		
@@ -83,19 +87,19 @@ with open(filename, "r") as file:
 # 	 	chromosomes.add(chrom)
 
 		variant = Variant(id="#".join([chrom, pos, ref, alt]), chrom=chrom, pos=pos, ref=ref, alt=alt)
-		variant_info = VariantInfo(id=chrom+"#"+str(items_loaded), qual=qual, filter=filter, info=info, format=format)
+		variant_info = VariantInfo(id=chrom+"#"+pos+"#"+str(items_loaded), qual=qual, filter=filter, info=info, format=format)
 		
 		# Nodes
 		csv_files[Variant].writerow(variant.get_all())
 		csv_files[VariantInfo].writerow(variant_info.get_all())
 		
 		# Edges
-		csv_files[HasVariant].writerow([chrom, variant.id])		
+		csv_files[HasVariant].writerow([chrom, variant.id])
 		csv_files[Info].writerow([variant.id, variant_info.id])
 		
 		# Genotype handling
 		for index, sample in enumerate(samples):
-			genotype_info = GenotypeInfo(id=sample)
+			genotype_info = GenotypeInfo(id=variant_info.id + "#" + sample_names[index], info=sample)
 
 			# Node
 			csv_files[GenotypeInfo].writerow(genotype_info.get_all())
@@ -107,7 +111,7 @@ with open(filename, "r") as file:
 		items_loaded += 1
 		
 		if items_loaded % STEP == 0:
-			print("Loaded {} items [time: {}]".format(items_loaded, datetime.datetime.now()))
+			print("[{}] Loaded {} items [time: {}]".format(simple_name, items_loaded, datetime.datetime.now()))
 
 # for chromosome in chromosomes:
 # 	chrom = Chromosome(id=chromosome)
@@ -117,8 +121,8 @@ for element in raw_files:
 	raw_files[element].close()
 	
 end_time = datetime.datetime.now()
-print("FINISHED ({})".format(end_time))
-print("STARTED ({})".format(start_time))
+print("[{}] FINISHED ({})".format(simple_name, end_time))
+print("[{}] STARTED ({})".format(simple_name, start_time))
 print("================================================")
-print("TOTAL TIME ({})".format(end_time - start_time))
+print("[{}] TOTAL TIME ({})".format(simple_name, end_time - start_time))
 

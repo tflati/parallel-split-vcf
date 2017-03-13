@@ -67,7 +67,7 @@ class GenotypeInfo(StructuredNode):
         return ["id", "info"]
         
     def get_all(self):
-        return [self.info]
+        return [self.id, self.info]
 
 class Genotype(StructuredNode):
     id = StringProperty(UniqueIndex=True, Required=True)
