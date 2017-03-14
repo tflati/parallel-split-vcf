@@ -4,12 +4,12 @@ config.DATABASE_URL = 'bolt://neo4j:password@localhost:7689'  # default
 class Info(StructuredRel):
     @staticmethod
     def get_names():
-        return ["Variant", "Info"]
+        return ["Variant", "VariantInfo"]
 
 class GenoInfo(StructuredRel):
     @staticmethod
     def get_names():
-        return ["Info", "GenotypeInfo"]
+        return ["VariantInfo", "GenotypeInfo"]
     
 class HasInfo(StructuredRel):
     @staticmethod
