@@ -1,21 +1,17 @@
-from neomodel import (config, StructuredNode, StringProperty, IntegerProperty, FloatProperty, StructuredRel, RelationshipTo, RelationshipFrom)
+from neomodel import (config, StructuredNode, StringProperty, IntegerProperty, ArrayProperty, JSONProperty, FloatProperty, StructuredRel, RelationshipTo, RelationshipFrom)
 config.DATABASE_URL = 'bolt://neo4j:password@localhost:7689'  # default
 
-class Info(StructuredRel):
-    @staticmethod
-    def get_names():
-        return ["Variant", "VariantInfo"]
-
-class GenoInfo(StructuredRel):
-    @staticmethod
-    def get_names():
-        return ["VariantInfo", "GenotypeInfo"]
+class Chromosome(StructuredNode):
+    id = StringProperty(UniqueIndex=True, Required=True)
+    hasVariant = RelationshipTo("Variant", "HasVariant")
     
-class HasInfo(StructuredRel):
     @staticmethod
     def get_names():
-        return ["GenotypeInfo", "Genotype"]
-
+        return ["id"]
+        
+    def get_all(self):
+        return [self.id]
+    
 class HasVariant(StructuredRel):
     @staticmethod
     def get_names():
@@ -28,8 +24,9 @@ class Variant(StructuredNode):
     pos = IntegerProperty()
     ref = StringProperty()
     alt = StringProperty()
-    info = RelationshipTo("VariantInfo", "Info")
+    
     hasVariant = RelationshipFrom("Chromosome", "HasVariant")
+    info = RelationshipTo("VariantInfo", "Info")
     
     @staticmethod
     def get_names():
@@ -38,51 +35,39 @@ class Variant(StructuredNode):
     def get_all(self):
         return [self.id, self.chrom, self.pos, self.ref, self.alt]
 
+class Info(StructuredRel):
+    @staticmethod
+    def get_names():
+        return ["Variant", "VariantInfo"]
+
 class VariantInfo(StructuredNode):
     id = StringProperty(Required=True)
     
     qual = FloatProperty()
     filter = StringProperty()
     info = StringProperty()
-    format = StringProperty()
-    info = RelationshipFrom("Variant", "Info")
-    genotypeInfo = RelationshipTo("GenotypeInfo", "GenoInfo")
+    
+    variant = RelationshipFrom("Variant", "Info")
+    sampleInfo = RelationshipTo("Sample", "SampleInfo")
     
     @staticmethod
     def get_names():
-        return ["id", "qual", "filter", "info", "format"]
+        return ["id", "qual", "filter", "info"]
         
     def get_all(self):
-        return [self.id, self.qual, self.filter, self.info, self.format]
+        return [self.id, self.qual, self.filter, self.info]
 
-class GenotypeInfo(StructuredNode):
-    id = StringProperty(Required=True)
-    
-    info = StringProperty()
-    variant_info = RelationshipFrom("VariantInfo", "GenoInfo")
-    hasInfo = RelationshipTo("Genotype", "HasInfo")
+class SampleInfo(StructuredRel):
+    info = JSONProperty()
     
     @staticmethod
     def get_names():
-        return ["id", "info"]
-        
-    def get_all(self):
-        return [self.id, self.info]
+        return ["VariantInfo", "Sample", "info"]
 
-class Genotype(StructuredNode):
+class Sample(StructuredNode):
     id = StringProperty(UniqueIndex=True, Required=True)
-    hasInfo = RelationshipFrom("GenotypeInfo", "HasInfo")
     
-    @staticmethod
-    def get_names():
-        return ["id"]
-        
-    def get_all(self):
-        return [self.id]
-    
-class Chromosome(StructuredNode):
-    id = StringProperty(UniqueIndex=True, Required=True)
-    hasVariant = RelationshipTo("Variant", "HasVariant")
+    hasInfo = RelationshipFrom("VariantInfo", "SampleInfo")
     
     @staticmethod
     def get_names():
@@ -91,15 +76,36 @@ class Chromosome(StructuredNode):
     def get_all(self):
         return [self.id]
 
-class Gene(StructuredNode):
-    id = StringProperty(UniqueIndex=True, Required=True)
+# class HasInfo(StructuredRel):
+#     @staticmethod
+#     def get_names():
+#         return ["GenotypeInfo", "Genotype"]
+
+# class GenotypeInfo(StructuredNode):
+#     id = StringProperty(Required=True)
+#     
+#     info = StringProperty()
+#     variant_info = RelationshipFrom("VariantInfo", "GenoInfo")
+#     hasInfo = RelationshipTo("Sample", "HasInfo")
+#     
+#     @staticmethod
+#     def get_names():
+#         return ["id", "info"]
+#         
+#     def get_all(self):
+#         return [self.id, self.info]
+
+
     
-    @staticmethod
-    def get_names():
-        return ["id"]
-        
-    def get_all(self):
-        return [self.id]
+# class Gene(StructuredNode):
+#     id = StringProperty(UniqueIndex=True, Required=True)
+#     
+#     @staticmethod
+#     def get_names():
+#         return ["id"]
+#         
+#     def get_all(self):
+#         return [self.id]
 
 
 
