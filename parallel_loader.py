@@ -24,11 +24,18 @@ if rank == 0:
     start_time = datetime.datetime.now()
     print("[MASTER] STARTED ({})".format(start_time))
 
-    files = [] 
-    for file in glob.glob(INPUTDIR + "/*"):
+    files = []
+    files_original = []
+    for file in sorted(glob.glob(INPUTDIR + "/*")):
         if os.path.basename(file) == "header.txt": continue
         if os.path.basename(file) == "chromosomes.txt": continue
+        
         files.append(file)
+        files_original.append(file)
+        
+        # TODO: remove this -- test only
+#         if len(files) == 2:
+#             break
     
     if not os.path.exists(BASEDIR):
         print("[MASTER] Creating output directory {}".format(BASEDIR))
@@ -64,14 +71,14 @@ if rank == 0:
                 sample_names = cols[9:]
                 
                 for sample_name in sample_names:
-                    genotype = Sample(id=sample_name)
+                    genotype = Sample(ID=sample_name)
                     csv_files[Sample].writerow(genotype.get_all())
                     
     print("[MASTER] Generating chromosome CSV...")
     with open(INPUTDIR + "chromosomes.txt", "r") as file:
         for line in file:
             chromosome = line.rstrip()
-            chrom = Chromosome(id=chromosome)
+            chrom = Chromosome(ID=chromosome)
             csv_files[Chromosome].writerow(chrom.get_all())
     
     for element in raw_files:
@@ -89,8 +96,39 @@ if rank == 0:
         comm.send(file, dest=sender, tag=DO)
     
     for i in range(1, size):
+        comm.recv(tag=FREE, source=i)
         print("[MASTER] SENDING DIE SIGNAL TO SLAVE {}".format(i))
         comm.send(file, dest=i, tag=FINISHED)
+        
+    # Gather statistics
+    stats = {}
+    for file in files_original:
+        outputdir = BASEDIR + str(os.path.basename(file)).replace(".vcf", "") + "/"
+        stat_filepath = outputdir + "statistics.txt"
+        print("Collecting statistics from file " + stat_filepath)
+        with open(stat_filepath, "r") as stat_file:
+            for line in stat_file:
+                pieces = line.split("\t")
+                ID, key, value = pieces[0], pieces[1], pieces[2]
+                if ID not in stats:
+                    stats[ID] = {}
+                if key not in stats[ID]:
+                    stats[ID][key] = 0
+                
+                try:
+                    v = int(value)
+                except ValueError:
+                    v = float(value)
+                
+                stats[ID][key] += v
+    
+    final_stat_filepath = BASEDIR + "statistics.txt"
+    writer = open(final_stat_filepath, "w")
+    for ID in stats:
+        for key in stats[ID]:
+            writer.write(ID +"\t" + key + "\t" + str(stats[ID][key]) + "\n")
+    writer.close()
+        
         
     end_time = datetime.datetime.now()
     print("[MASTER] FINISHED ({})".format(end_time - start_time))

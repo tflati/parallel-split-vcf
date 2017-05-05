@@ -2,15 +2,15 @@ from neomodel import (config, StructuredNode, StringProperty, IntegerProperty, A
 config.DATABASE_URL = 'bolt://neo4j:password@localhost:7689'  # default
 
 class Chromosome(StructuredNode):
-    id = StringProperty(UniqueIndex=True, Required=True)
+    ID = StringProperty(UniqueIndex=True, Required=True)
     hasVariant = RelationshipTo("Variant", "HasVariant")
     
     @staticmethod
     def get_names():
-        return ["id"]
+        return ["ID"]
         
     def get_all(self):
-        return [self.id]
+        return [self.ID]
     
 class HasVariant(StructuredRel):
     @staticmethod
@@ -18,22 +18,23 @@ class HasVariant(StructuredRel):
         return ["Chromosome", "Variant"]
 
 class Variant(StructuredNode):
-    id = StringProperty(Required=True)
+    ID = StringProperty(Required=True)
     
     chrom = StringProperty()
     pos = IntegerProperty()
     ref = StringProperty()
     alt = StringProperty()
+    type = StringProperty()
     
     hasVariant = RelationshipFrom("Chromosome", "HasVariant")
     info = RelationshipTo("VariantInfo", "Info")
     
     @staticmethod
     def get_names():
-        return ["id", "chrom", "pos", "ref", "alt"]
+        return ["ID", "chrom", "pos", "ref", "alt", "type"]
         
     def get_all(self):
-        return [self.id, self.chrom, self.pos, self.ref, self.alt]
+        return [self.ID, self.chrom, self.pos, self.ref, self.alt, self.type]
 
 class Info(StructuredRel):
     @staticmethod
@@ -41,7 +42,7 @@ class Info(StructuredRel):
         return ["Variant", "VariantInfo"]
 
 class VariantInfo(StructuredNode):
-    id = StringProperty(Required=True)
+    ID = StringProperty(Required=True)
     
     qual = FloatProperty()
     filter = StringProperty()
@@ -52,10 +53,10 @@ class VariantInfo(StructuredNode):
     
     @staticmethod
     def get_names():
-        return ["id", "qual", "filter", "info"]
+        return ["ID", "qual", "filter", "info"]
         
     def get_all(self):
-        return [self.id, self.qual, self.filter, self.info]
+        return [self.ID, self.qual, self.filter, self.info]
 
 class SampleInfo(StructuredRel):
     info = JSONProperty()
@@ -65,47 +66,16 @@ class SampleInfo(StructuredRel):
         return ["VariantInfo", "Sample", "info"]
 
 class Sample(StructuredNode):
-    id = StringProperty(UniqueIndex=True, Required=True)
+    ID = StringProperty(UniqueIndex=True, Required=True)
     
     hasInfo = RelationshipFrom("VariantInfo", "SampleInfo")
     
     @staticmethod
     def get_names():
-        return ["id"]
+        return ["ID"]
         
     def get_all(self):
-        return [self.id]
-
-# class HasInfo(StructuredRel):
-#     @staticmethod
-#     def get_names():
-#         return ["GenotypeInfo", "Genotype"]
-
-# class GenotypeInfo(StructuredNode):
-#     id = StringProperty(Required=True)
-#     
-#     info = StringProperty()
-#     variant_info = RelationshipFrom("VariantInfo", "GenoInfo")
-#     hasInfo = RelationshipTo("Sample", "HasInfo")
-#     
-#     @staticmethod
-#     def get_names():
-#         return ["id", "info"]
-#         
-#     def get_all(self):
-#         return [self.id, self.info]
-
-
-    
-# class Gene(StructuredNode):
-#     id = StringProperty(UniqueIndex=True, Required=True)
-#     
-#     @staticmethod
-#     def get_names():
-#         return ["id"]
-#         
-#     def get_all(self):
-#         return [self.id]
+        return [self.ID]
 
 
 

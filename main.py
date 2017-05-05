@@ -7,19 +7,20 @@ import os
 from sortedcontainers import SortedSet
 
 start_time = datetime.datetime.now()
-print("STARTED ({})".format(start_time))
 
 filename = sys.argv[1]
 basedir = sys.argv[2]
 
 simple_name = os.path.basename(filename)
 
+print("[{}] STARTED ({})".format(simple_name, start_time))
+
 if not os.path.exists(basedir):
 	os.makedirs(basedir)
 
 max_items = -1
 items_loaded = 0
-STEP = 1000
+STEP = 10000
 
 raw_files = {}
 csv_files = {}
@@ -52,6 +53,16 @@ for element in [Info, HasVariant, SampleInfo]:
 
 # vcf_reader = vcf.Reader(open(filename, 'r'))
 # for record in vcf_reader:
+
+statistics = {}
+TOTAL_SNPS = "TOTAL_SNPS"
+TOTAL_INDELS = "TOTAL_INDELS"
+SNPS_PER_SAMPLE = "SNPS_PER_SAMPLE"
+INDELS_PER_SAMPLE = "INDELS_PER_SAMPLE"
+VARIANTS_PER_SAMPLE = "VARIANTS_PER_SAMPLE"
+IDS = [TOTAL_SNPS, TOTAL_INDELS, SNPS_PER_SAMPLE, INDELS_PER_SAMPLE, VARIANTS_PER_SAMPLE]
+for ID in IDS:
+	statistics[ID] = {}
 
 totalSampleInfoEdges = sampleInfoEdgesSkipped = 0
 
@@ -98,40 +109,78 @@ with open(filename, "r") as file:
 				key, value = subi.split("=")
 				info_dict[key] = value
 		
-		variant = Variant(id="#".join([chrom, pos, ref, alt]), chrom=chrom, pos=pos, ref=ref, alt=alt)
-		variant_info = VariantInfo(id=chrom+"#"+pos+"#"+str(items_loaded), qual=qual, filter=filter, info=info_dict)
+		# Detect type
+		type = "SNP"
+		if len(ref) > 1:
+			type = "INDEL"
+		for a in alt:
+			if len(a) > 1:
+				type = "INDEL"
+		
+		if "snps" not in statistics[TOTAL_SNPS]:
+			statistics[TOTAL_SNPS]["snps"] = 0
+		if "indels" not in statistics[TOTAL_INDELS]:
+			statistics[TOTAL_INDELS]["indels"] = 0
+			
+		if type == "SNP":
+			statistics[TOTAL_SNPS]["snps"] += 1
+		elif type == "INDEL":
+			statistics[TOTAL_INDELS]["indels"] += 1
+		
+		variant = Variant(ID="#".join([chrom, pos, ref, alt]), chrom=chrom, pos=pos, ref=ref, alt=alt, type=type)
+		variant_info = VariantInfo(ID=chrom+"#"+pos+"#"+str(items_loaded), qual=qual, filter=filter, info=info_dict)
 		
 		# Nodes
 		csv_files[Variant].writerow(variant.get_all())
 		csv_files[VariantInfo].writerow(variant_info.get_all())
 		
 		# Edges
-		csv_files[HasVariant].writerow([chrom, variant.id])
-		csv_files[Info].writerow([variant.id, variant_info.id])
+		csv_files[HasVariant].writerow([chrom, variant.ID])
+		csv_files[Info].writerow([variant.ID, variant_info.ID])
 		
 		# Genotype handling
 		for index, sample in enumerate(samples):
 			
 			# Build this sample's information
 			sampleInfo = dict(zip(format, sample.split(":")))
+			sampleID = sample_names[index]
 			
 			# Filtering edges
 			if sampleInfo["GT"] == "0/0" or sampleInfo["GT"] == "./.":
 				sampleInfoEdgesSkipped += 1
 				continue
 			
-			csv_files[SampleInfo].writerow([variant_info.id, sample_names[index], sampleInfo])
+			csv_files[SampleInfo].writerow([variant_info.ID, sampleID, sampleInfo])
 			totalSampleInfoEdges += 1
-
+			
+			if type == "SNP":
+				if sampleID not in statistics[SNPS_PER_SAMPLE]:
+					statistics[SNPS_PER_SAMPLE][sampleID] = 0
+				statistics[SNPS_PER_SAMPLE][sampleID] += 1
+			elif type == "INDEL":
+				if sampleID not in statistics[INDELS_PER_SAMPLE]:
+					statistics[INDELS_PER_SAMPLE][sampleID] = 0
+				statistics[INDELS_PER_SAMPLE][sampleID] += 1
+			
+			if sampleID not in statistics[VARIANTS_PER_SAMPLE]:
+				statistics[VARIANTS_PER_SAMPLE][sampleID] = 0
+			statistics[VARIANTS_PER_SAMPLE][sampleID] += 1
+			
 		items_loaded += 1
 		
 		if items_loaded % STEP == 0:
 			print("[{}] Loaded {} items [time: {}]".format(simple_name, items_loaded, datetime.datetime.now()))
 
-# for chromosome in chromosomes:
-# 	chrom = Chromosome(id=chromosome)
-# 	csv_files[Chromosome].writerow(chrom.get_all())
-	
+final_stat_filepath = basedir + "statistics.txt"
+print("[{}] Opening statistics file in write mode: {}".format(simple_name, final_stat_filepath))
+writer = open(final_stat_filepath, "w")
+for ID in statistics:
+	for key in statistics[ID]:
+		writer.write(ID +"\t" + key + "\t" + str(statistics[ID][key]) + "\n")
+writer.flush()
+writer.close()
+print("[{}] Statistics file {} closed.".format(simple_name, final_stat_filepath))
+
 for element in raw_files:
 	raw_files[element].close()
 

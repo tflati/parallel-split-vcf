@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DATA_DIR="/home/flati/Downloads/peach/csv_pieces5/"
-NEO4J_HOME="/home/flati/Downloads/neo4j-community-3.1.1"
+DATA_DIR="/home/flati/data/cirilli/peach/csv_pieces_all/"
+NEO4J_HOME="/home/flati/peach_project/neo4j-community-3.1.3"
 DIR=$NEO4J_HOME"/data/databases/graph.db"
 
 echo "Stopping neo4j"
