@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# USAGE split_vcf_into_pieces.sh VCF_FILE.vcf OUTDIR 20000
+
 file=$1
 outdir=$2
 lines=$3

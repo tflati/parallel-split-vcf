@@ -3,7 +3,7 @@ import glob
 import sys
 import os
 import subprocess
-from models import Sample, Chromosome
+from models import Sample, Chromosome, VariantInfo, Variant
 import csv
 import gzip
 import datetime
@@ -16,7 +16,10 @@ FREE = 0
 DO = 1
 FINISHED = 2
 
+# The directory containing the pieces of the VCF file
+# This directory must also contain other 2 files: header.txt and chromosome.txt
 INPUTDIR = sys.argv[1]
+# The output directory
 BASEDIR = sys.argv[2]
 
 if rank == 0:
@@ -33,10 +36,6 @@ if rank == 0:
         files.append(file)
         files_original.append(file)
         
-        # TODO: remove this -- test only
-#         if len(files) == 2:
-#             break
-    
     if not os.path.exists(BASEDIR):
         print("[MASTER] Creating output directory {}".format(BASEDIR))
         os.makedirs(BASEDIR)
@@ -44,14 +43,17 @@ if rank == 0:
     raw_files = {}
     csv_files = {}
 
-    for element in [Sample, Chromosome]:
+    for element in [Sample, Chromosome, VariantInfo, Variant]:
         raw_file = gzip.open(BASEDIR + str(element.__name__) + ".csv.gz", "w")
         csv_file = csv.writer(raw_file)
     
-#         names = element.get_names()
         names = [name for name in element.get_names()]
         names[0] = names[0] + ":ID("+str(element.__name__)+")"
-        csv_file.writerow(names);
+        
+        if element is Variant: names[2] += ":INT"
+        elif element is VariantInfo: names[1] += ":FLOAT"
+        
+        csv_file.writerow(names)
         
         csv_files[element] = csv_file
         raw_files[element] = raw_file

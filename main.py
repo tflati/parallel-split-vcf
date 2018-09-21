@@ -1,4 +1,5 @@
 from models import Variant, VariantInfo, Info, HasVariant, SampleInfo
+import json
 import csv
 import gzip
 import datetime
@@ -8,7 +9,10 @@ from sortedcontainers import SortedSet
 
 start_time = datetime.datetime.now()
 
+# The input VCF file 
 filename = sys.argv[1]
+
+# The output directory where to store the CSV files
 basedir = sys.argv[2]
 
 simple_name = os.path.basename(filename)
@@ -29,12 +33,7 @@ csv_files = {}
 for element in [Variant, VariantInfo]:
 	raw_file = gzip.open(basedir + str(element.__name__) + ".csv.gz", "w")
 	csv_file = csv.writer(raw_file)
-	
-	names = [name for name in element.get_names()]
-	names[0] = names[0] + ":ID("+ str(element.__name__) + ")"
-# 	names = element.get_names()
-
-	csv_file.writerow(names);
+ 	
 	csv_files[element] = csv_file
 	raw_files[element] = raw_file
 	
@@ -45,14 +44,9 @@ for element in [Info, HasVariant, SampleInfo]:
 	node_types[0] = ":START_ID("+node_types[0]+")"
 	node_types[1] = ":END_ID("+node_types[1]+")"
 	
-	csv_file.writerow(node_types);
+	csv_file.writerow(node_types)
 	csv_files[element] = csv_file
 	raw_files[element] = raw_file
-
-# chromosomes = SortedSet()
-
-# vcf_reader = vcf.Reader(open(filename, 'r'))
-# for record in vcf_reader:
 
 statistics = {}
 TOTAL_SNPS = "TOTAL_SNPS"
@@ -79,10 +73,6 @@ with open(filename, "r") as file:
 			cols = line.split("\t")
 			col_names = cols[0:9]
 			sample_names = cols[9:]
-			
-# 			for sample_name in sample_names:
-# 				genotype = Genotype(id=sample_name)
-# 				csv_files[Genotype].writerow(genotype.get_all())
 			
 			continue
 		
@@ -113,7 +103,7 @@ with open(filename, "r") as file:
 		type = "SNP"
 		if len(ref) > 1:
 			type = "INDEL"
-		for a in alt:
+		for a in alt.split(","):
 			if len(a) > 1:
 				type = "INDEL"
 		
@@ -128,7 +118,7 @@ with open(filename, "r") as file:
 			statistics[TOTAL_INDELS]["indels"] += 1
 		
 		variant = Variant(ID="#".join([chrom, pos, ref, alt]), chrom=chrom, pos=pos, ref=ref, alt=alt, type=type)
-		variant_info = VariantInfo(ID=chrom+"#"+pos+"#"+str(items_loaded), qual=qual, filter=filter, info=info_dict)
+		variant_info = VariantInfo(ID=chrom+"#"+pos+"#"+str(items_loaded), qual=qual, filter=filter, info=json.dumps(info_dict), format=":".join(format))
 		
 		# Nodes
 		csv_files[Variant].writerow(variant.get_all())
@@ -150,7 +140,7 @@ with open(filename, "r") as file:
 				sampleInfoEdgesSkipped += 1
 				continue
 			
-			csv_files[SampleInfo].writerow([variant_info.ID, sampleID, sampleInfo])
+			csv_files[SampleInfo].writerow([variant_info.ID, sampleID, json.dumps(sampleInfo)])
 			totalSampleInfoEdges += 1
 			
 			if type == "SNP":

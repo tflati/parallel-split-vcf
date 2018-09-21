@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# USAGE: split_vcf.sh VCF_FILE.vcf OUTDIR
+# where OUTDIR is the directory which will contain the vcf split into pieces
+
 OUT_DIR=$2
 if [ -z "$OUT_DIR" ]
 then

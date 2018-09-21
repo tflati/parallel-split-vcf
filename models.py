@@ -47,19 +47,20 @@ class VariantInfo(StructuredNode):
     qual = FloatProperty()
     filter = StringProperty()
     info = StringProperty()
+    format = StringProperty()
     
     variant = RelationshipFrom("Variant", "Info")
     sampleInfo = RelationshipTo("Sample", "SampleInfo")
     
     @staticmethod
     def get_names():
-        return ["ID", "qual", "filter", "info"]
+        return ["ID", "qual", "filter", "info", "format"]
         
     def get_all(self):
-        return [self.ID, self.qual, self.filter, self.info]
+        return [self.ID, self.qual, self.filter, self.info, self.format]
 
 class SampleInfo(StructuredRel):
-    info = JSONProperty()
+    info = StringProperty()
     
     @staticmethod
     def get_names():
