@@ -154,7 +154,7 @@ else:
             
             # Process input data
             outputdir = BASEDIR + str(os.path.basename(data)).replace(".vcf", "") + "/"
-            command = "python main.py " + data + " " + outputdir
+            command = "python converter.py " + data + " " + outputdir
             print("RANK={} will execute commmand='{}'".format(rank, command))
             
             pid = subprocess.Popen(command, shell=True)

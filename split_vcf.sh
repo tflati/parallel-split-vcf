@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # USAGE: split_vcf.sh VCF_FILE.vcf OUTDIR
-# where OUTDIR is the directory which will contain the vcf split into pieces
+# where OUTDIR is the directory which will contain the vcf split into pieces (into chromosome-based files)
 
 OUT_DIR=$2
 if [ -z "$OUT_DIR" ]

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # USAGE split_vcf_into_pieces.sh VCF_FILE.vcf OUTDIR 20000
+# Splits the input file in multiple smaller files (each made of maximum XXX lines)
 
 file=$1
 outdir=$2

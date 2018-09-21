@@ -68,6 +68,7 @@ class SampleInfo(StructuredRel):
 
 class Sample(StructuredNode):
     ID = StringProperty(UniqueIndex=True, Required=True)
+    tag = StringProperty()
     
     hasInfo = RelationshipFrom("VariantInfo", "SampleInfo")
     
