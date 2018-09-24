@@ -4,13 +4,13 @@
 
 ### Usage for a single VCF file:
 
-> ./split\_vcf\_into_pieces.sh <VCF\_FILE.vcf> <PIECES\_OUT\_DIR> 20000
+> ./split\_vcf\_into\_pieces.sh <PIECES\_OUT\_DIR> 20000 <VCF\_FILE.vcf>
 >
 > ./launch.sh <PIECES\_OUT\_DIR> <CSV\_DIR>
 
 ###  Usage for multiple VCF files:
 
-> ./split_vcf_into_pieces.sh <VCF\_FILE> [<VCF\_FILE>] <PIECES\_OUT\_DIR> 20000
+> ./split\_vcf\_into\_pieces.sh <PIECES\_OUT\_DIR> 20000 <VCF\_FILE> [<VCF\_FILE>]
 >
 > ./launch.sh <PIECES\_OUT\_DIR> <CSV\_DIR> <PHENODATA.TSV>
 
@@ -36,3 +36,20 @@ or
 > Sample5	Populus_Trichocarpa
 >
 > Sample6	Populus_Euphratica
+
+To tag samples, you can use the following scripts (*extract_samples.sh* and *tag_samples.sh*) on each sample group, to tag all the samples of a given group with the same tag automatically:
+
+> ./extract\_samples.sh <VCF\_FILE.vcf> <VCF\_FILE.vcf> <VCF\_FILE.vcf> | ./tag\_samples.sh "MY_TAG" > phenodata.tsv
+
+For example:
+
+> ./extract\_samples.sh ../../trichocarpa/data/*/Combined\_indels\_filt.vcf | ./tag\_samples.sh "Trichocarpa" > trichocarpa\_phenodata.tsv
+>
+> ./extract\_samples.sh ../../morgante/data/*/Combined\_indels\_filt.vcf | ./tag\_samples.sh "Nigra\_M" > nigram\_phenodata.tsv
+>
+> ./extract\_samples.sh ../../euphratica/data/*/Combined\_indels\_filt.vcf | ./tag\_samples.sh "Euphratica" > euphratica\_phenodata.tsv
+
+and then merge the three phenodata files into a single one:
+
+> cat \*phenodata.\* > poplar\_phenodata\_all.tsv
+

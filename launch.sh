@@ -7,7 +7,7 @@
 #OUTPUT_DIR="~/Downloads/peach/csv/"
 INPUT_DIR=$1
 OUTPUT_DIR=$2
-BREED_FILE=$3
+PHENODATA_FILE=$3
 CORES="4"
 
-time mpirun -np $CORES python ./parallel_converter.py "$INPUT_DIR" "$OUTPUT_DIR"
+time mpirun -np $CORES python ./parallel_converter.py "$INPUT_DIR" "$OUTPUT_DIR" "$PHENODATA_FILE"

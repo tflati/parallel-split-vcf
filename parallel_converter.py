@@ -21,6 +21,8 @@ FINISHED = 2
 INPUTDIR = sys.argv[1]
 # The output directory
 BASEDIR = sys.argv[2]
+# The phenodata file
+PHENODATA = sys.argv[3] if len(sys.argv) > 3 else None
 
 if rank == 0:
     
@@ -29,9 +31,9 @@ if rank == 0:
 
     files = []
     files_original = []
-    for file in sorted(glob.glob(INPUTDIR + "/*")):
-        if os.path.basename(file) == "header.txt": continue
-        if os.path.basename(file) == "chromosomes.txt": continue
+    for file in sorted(glob.glob(INPUTDIR + "/*/piece*")):
+        #if os.path.basename(file) == "header.txt": continue
+        #if os.path.basename(file) == "chromosomes.txt": continue
         
         files.append(file)
         files_original.append(file)
@@ -58,23 +60,38 @@ if rank == 0:
         csv_files[element] = csv_file
         raw_files[element] = raw_file
     
+    # Read PHENODATA file (if available)
+    phenodata_map = {}
+    if PHENODATA is not None:
+        with open(PHENODATA, "r") as f:
+            for line in f:
+                sample_id, tag = line.strip().split("\t")
+                phenodata_map[sample_id] = tag
+                
+    print("Loaded {} total phenodata".format(len(phenodata_map)))
+    
     # Produce file-specific information
     print("[MASTER] Generating genotype CSV...")
-    with open(INPUTDIR + "header.txt", "r") as file:
-        for line in file:
-            
-            line = line.rstrip()
-            
-            if line.startswith("##"): continue
-            if line.startswith("#"):
-                line = line[1:]
-                cols = line.split("\t")
-                col_names = cols[0:9]
-                sample_names = cols[9:]
+    for header_file in sorted(glob.glob(INPUTDIR + "/*/header.txt")):
+        with open(header_file, "r") as file:
+            for line in file:
                 
-                for sample_name in sample_names:
-                    genotype = Sample(ID=sample_name)
-                    csv_files[Sample].writerow(genotype.get_all())
+                line = line.rstrip()
+                
+                if line.startswith("##"): continue
+                if line.startswith("#"):
+                    line = line[1:]
+                    cols = line.split("\t")
+                    col_names = cols[0:9]
+                    sample_names = cols[9:]
+                    
+                    for sample_name in sample_names:
+                        if sample_name in phenodata_map:
+                            genotype = Sample(ID=sample_name, tag=phenodata_map[sample_name])
+                        else:
+                            genotype = Sample(ID=sample_name)
+                            
+                        csv_files[Sample].writerow(genotype.get_all())
                     
     print("[MASTER] Generating chromosome CSV...")
     with open(INPUTDIR + "chromosomes.txt", "r") as file:

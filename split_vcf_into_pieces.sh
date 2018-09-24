@@ -35,6 +35,8 @@ do
 	cat "$file" | tee >(grep "#" > "$outdir/$simple/header.txt") | grep -v "#" | split -d -l $lines - "$outdir/$simple/piece-"
 done
 
+find $outdir -name "header.txt" | xargs bash -c 'grep "#CHROM" | cut -f 10- | tr "\t" "\n"'
+
 find "$outdir" -type f -name "piece*" -exec sh -c '
 	file="$0"
 	simple=`dirname "$file"`
@@ -44,4 +46,4 @@ find "$outdir" -type f -name "piece*" -exec sh -c '
 	rm "$file.tmp"
 ' {} ';'
 
-find "$outdir" -name "header.txt" -print0 | xargs -0 rm
+# find "$outdir" -name "header.txt" -print0 | xargs -0 rm
