@@ -35,7 +35,7 @@ do
 	cat "$file" | tee >(grep "#" > "$outdir/$simple/header.txt") | grep -v "#" | split -d -l $lines - "$outdir/$simple/piece-"
 done
 
-find "$outdir" -name "piece*" -exec sh -c '
+find "$outdir" -type f -name "piece*" -exec sh -c '
 	file="$0"
 	simple=`dirname "$file"`
 	echo "Finalizing file $file (dir=$simple)"
