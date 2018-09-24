@@ -1,27 +1,43 @@
 #!/bin/bash
 
-# USAGE split_vcf_into_pieces.sh VCF_FILE.vcf OUTDIR 20000
+# USAGE ./split_vcf_into_pieces.sh OUTDIR 20000 <VCF_FILE.vcf> [<VCF_FILE.vcf>]
 # Splits the input file in multiple smaller files (each made of maximum XXX lines)
 
-file=$1
-outdir=$2
-lines=$3
+outdir=$1
+lines=$2
+shift
+shift
 
-if [ ! -d $outdir ]
+if [ ! -d "$outdir" ]
 then
-	mkdir $outdir
+	mkdir "$outdir"
 fi
 
+
 echo "Generating list of chromosomes"
-cat $file | grep -v "^#" | cut -f 1 | sort | uniq > $outdir/chromosomes.txt
+for file in "$@"
+do
+	cat "$file" | grep -v "^#" | cut -f 1
+done | sort | uniq > $outdir/chromosomes.txt
 
 echo "Splitting file into pieces"
-cat $file | tee >(grep "#" > $outdir/header.txt) | grep -v "#" | split -d -l $lines - "$outdir"piece-
-
-for file in `ls "$outdir"piece*`
+for file in "$@"
 do
-	echo "Finalizing file $file"
-	mv $file $file.tmp
-	cat $outdir/header.txt $file.tmp > $file
-        rm $file.tmp
+	simple=`basename "$file"`
+	if [ ! -d "$outdir/$simple" ]
+	then
+		mkdir "$outdir/$simple"
+	fi
+	
+	cat "$file" | tee >(grep "#" > "$outdir/$simple/header.txt") | grep -v "#" | split -d -l $lines - "$outdir/$simple/piece-"
 done
+
+find "$outdir" -name "piece*" -exec sh -c '
+	file="$0"
+	simple=`dirname "$file"`
+	echo "Finalizing file $file (dir=$simple)"
+	mv "$file" "$file.tmp"
+	cat "$simple/header.txt" "$file.tmp" > "$file"
+	rm "$file.tmp"
+	rm "$simple/header.txt"
+' {} ';'
