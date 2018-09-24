@@ -14,15 +14,18 @@ then
 fi
 
 
+echo "Analyzing $# VCF files"
+
 echo "Generating list of chromosomes"
 for file in "$@"
 do
-	cat "$file" | grep -v "^#" | cut -f 1
+	cat "$file" | cut -f 1 | grep -v "^#"
 done | sort | uniq > $outdir/chromosomes.txt
 
 echo "Splitting file into pieces"
 for file in "$@"
 do
+	echo "Splitting file $file"
 	simple=`basename "$file"`
 	if [ ! -d "$outdir/$simple" ]
 	then
@@ -39,5 +42,6 @@ find "$outdir" -name "piece*" -exec sh -c '
 	mv "$file" "$file.tmp"
 	cat "$simple/header.txt" "$file.tmp" > "$file"
 	rm "$file.tmp"
-	rm "$simple/header.txt"
 ' {} ';'
+
+find "$outdir" -name "header.txt" -print0 | xargs -0 rm
