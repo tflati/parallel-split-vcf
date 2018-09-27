@@ -7,7 +7,7 @@ class Chromosome(StructuredNode):
     
     @staticmethod
     def get_names():
-        return ["ID"]
+        return ["ID"+":ID(Chromosome)"]
         
     def get_all(self):
         return [self.ID]
@@ -31,7 +31,7 @@ class Variant(StructuredNode):
     
     @staticmethod
     def get_names():
-        return ["ID", "chrom", "pos", "ref", "alt", "type"]
+        return ["ID"+":ID(Variant)", "chrom", "pos:INT", "ref", "alt", "type"]
         
     def get_all(self):
         return [self.ID, self.chrom, self.pos, self.ref, self.alt, self.type]
@@ -54,7 +54,7 @@ class VariantInfo(StructuredNode):
     
     @staticmethod
     def get_names():
-        return ["ID", "qual", "filter", "info", "format"]
+        return ["ID"+":ID(VariantInfo)", "qual:FLOAT", "filter", "info", "format"]
         
     def get_all(self):
         return [self.ID, self.qual, self.filter, self.info, self.format]
@@ -74,10 +74,10 @@ class Sample(StructuredNode):
     
     @staticmethod
     def get_names():
-        return ["ID"]
+        return ["ID"+":ID(Sample)", "tag"]
         
     def get_all(self):
-        return [self.ID]
+        return [self.ID, self.tag]
 
 
 

@@ -5,7 +5,7 @@ import gzip
 import datetime
 import sys
 import os
-from sortedcontainers import SortedSet
+# from sortedcontainers import SortedSet
 
 start_time = datetime.datetime.now()
 
@@ -17,7 +17,7 @@ basedir = sys.argv[2]
 
 simple_name = os.path.basename(filename)
 
-print("[{}] STARTED ({})".format(simple_name, start_time))
+#print("[{}] STARTED ({})".format(simple_name, start_time))
 
 if not os.path.exists(basedir):
 	os.makedirs(basedir)
@@ -26,7 +26,7 @@ max_items = -1
 items_loaded = 0
 STEP = 10000
 
-raw_files = {}
+# raw_files = {}
 csv_files = {}
 
 # "variants", "variant_infos", "genotypes", "genotype_infos", "chromosomes"
@@ -35,18 +35,18 @@ for element in [Variant, VariantInfo]:
 	csv_file = csv.writer(raw_file)
  	
 	csv_files[element] = csv_file
-	raw_files[element] = raw_file
+# 	raw_files[element] = raw_file
 	
 for element in [Info, HasVariant, SampleInfo]:
 	raw_file = gzip.open(basedir + str(element.__name__) + ".csv.gz", "w")
 	csv_file = csv.writer(raw_file)
-	node_types = [el for el in element.get_names()]
-	node_types[0] = ":START_ID("+node_types[0]+")"
-	node_types[1] = ":END_ID("+node_types[1]+")"
-	
-	csv_file.writerow(node_types)
+# 	node_types = [el for el in element.get_names()]
+# 	node_types[0] = ":START_ID("+node_types[0]+")"
+# 	node_types[1] = ":END_ID("+node_types[1]+")"
+# 	
+# 	csv_file.writerow(node_types)
 	csv_files[element] = csv_file
-	raw_files[element] = raw_file
+# 	raw_files[element] = raw_file
 
 statistics = {}
 TOTAL_SNPS = "TOTAL_SNPS"
@@ -158,27 +158,27 @@ with open(filename, "r") as file:
 			
 		items_loaded += 1
 		
-		if items_loaded % STEP == 0:
-			print("[{}] Loaded {} items [time: {}]".format(simple_name, items_loaded, datetime.datetime.now()))
+		#if items_loaded % STEP == 0:
+			#print("[{}] Loaded {} items [time: {}]".format(simple_name, items_loaded, datetime.datetime.now()))
 
 final_stat_filepath = basedir + "statistics.txt"
-print("[{}] Opening statistics file in write mode: {}".format(simple_name, final_stat_filepath))
+#print("[{}] Opening statistics file in write mode: {}".format(simple_name, final_stat_filepath))
 writer = open(final_stat_filepath, "w")
 for ID in statistics:
 	for key in statistics[ID]:
 		writer.write(ID +"\t" + key + "\t" + str(statistics[ID][key]) + "\n")
 writer.flush()
 writer.close()
-print("[{}] Statistics file {} closed.".format(simple_name, final_stat_filepath))
+#print("[{}] Statistics file {} closed.".format(simple_name, final_stat_filepath))
 
-for element in raw_files:
-	raw_files[element].close()
+# for element in raw_files:
+# 	raw_files[element].close()
 
-print("[{}] totalSampleInfoEdges={} sampleInfoEdgesSkipped={} ({})".format(simple_name, totalSampleInfoEdges, sampleInfoEdgesSkipped, float(sampleInfoEdgesSkipped)/(totalSampleInfoEdges+sampleInfoEdgesSkipped)))
+#print("[{}] totalSampleInfoEdges={} sampleInfoEdgesSkipped={} ({})".format(simple_name, totalSampleInfoEdges, sampleInfoEdgesSkipped, float(sampleInfoEdgesSkipped)/(totalSampleInfoEdges+sampleInfoEdgesSkipped)))
 	
 end_time = datetime.datetime.now()
-print("[{}] FINISHED ({})".format(simple_name, end_time))
-print("[{}] STARTED ({})".format(simple_name, start_time))
-print("================================================")
-print("[{}] TOTAL TIME ({})".format(simple_name, end_time - start_time))
+#print("[{}] FINISHED ({})".format(simple_name, end_time))
+#print("[{}] STARTED ({})".format(simple_name, start_time))
+#print("================================================")
+#print("[{}] TOTAL TIME ({})".format(simple_name, end_time - start_time))
 
