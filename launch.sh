@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# USAGE: launch.sh PIECES_DIR CSV_DIR
+# USAGE: launch.sh PIECES_DIR CSV_DIR [PHENODATA_FILE]
 # Given the directory with the VCF pieces, this script creates the corresponding CSV files.
 
 #INPUT_DIR="~/Downloads/peach/out/"
